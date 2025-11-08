@@ -1,0 +1,12 @@
+[submodule "services/auth-service"]
+	path = services/auth-service
+	url = https://github.com/ijas9118/fleetOS-auth-service.git
+[submodule "services/fleet-service"]
+	path = services/fleet-service
+	url = https://github.com/ijas9118/fleetOS-fleet-service
+[submodule "services/inventory-service"]
+	path = services/inventory-service
+	url = https://github.com/ijas9118/fleetOS-inventory-service
+[submodule "services/shipment-service"]
+	path = services/shipment-service
+	url = https://github.com/ijas9118/fleetOS-shipment-service
