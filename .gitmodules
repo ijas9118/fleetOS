@@ -10,3 +10,6 @@
 [submodule "services/shipment-service"]
 	path = services/shipment-service
 	url = https://github.com/ijas9118/fleetOS-shipment-service
+[submodule "services/api-gateway"]
+	path = services/api-gateway
+	url = https://github.com/ijas9118/fleetOS-api-gateway

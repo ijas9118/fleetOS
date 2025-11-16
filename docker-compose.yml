@@ -1,0 +1,68 @@
+services:
+  mongo-db:
+    container_name: mongo-db
+    image: mongo:7.0
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: cantremember
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - app-network
+
+  redis-stack:
+    container_name: redis-stack
+    image: redis/redis-stack:7.2.0-v18
+    restart: always
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+
+  api-gateway:
+    container_name: fleetOS-api-gateway
+    image: fleet-os-api-gateway-image
+    build:
+      context: ./fleetOS-api-gateway
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./fleetOS-api-gateway:/app
+      - /app/node_modules
+    ports:
+      - 3000:3000
+    env_file:
+      - ./fleetOS-api-gateway/.env
+    networks:
+      - app-network
+
+  auth-service:
+    container_name: fleetOS-auth-service
+    image: fleet-os-auth-service-image
+    build:
+      context: ./fleetOS-auth-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./fleetOS-auth-service:/app
+      - /app/node_modules
+    ports:
+      - 3001:3001
+    depends_on:
+      - mongo-db
+    env_file:
+      - ./fleetOS-auth-service/.env
+    networks:
+      - app-network
+
+volumes:
+  mongodb-data:
+  redis-data:
+
+networks:
+  app-network:
+    driver: bridge
