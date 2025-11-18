@@ -1,15 +1,15 @@
 [submodule "services/auth-service"]
 	path = services/auth-service
-	url = https://github.com/ijas9118/fleetOS-auth-service.git
+	url = https://github.com/ijas9118/fleet-os-auth-service.git
 [submodule "services/fleet-service"]
 	path = services/fleet-service
-	url = https://github.com/ijas9118/fleetOS-fleet-service
+	url = https://github.com/ijas9118/fleet-os-fleet-service
 [submodule "services/inventory-service"]
 	path = services/inventory-service
-	url = https://github.com/ijas9118/fleetOS-inventory-service
+	url = https://github.com/ijas9118/fleet-os-inventory-service
 [submodule "services/shipment-service"]
 	path = services/shipment-service
-	url = https://github.com/ijas9118/fleetOS-shipment-service
+	url = https://github.com/ijas9118/fleet-os-shipment-service
 [submodule "services/api-gateway"]
 	path = services/api-gateway
-	url = https://github.com/ijas9118/fleetOS-api-gateway
+	url = https://github.com/ijas9118/fleet-os-api-gateway
