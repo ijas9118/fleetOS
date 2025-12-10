@@ -10,6 +10,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: cantremember
     volumes:
       - mongodb-data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
     networks:
       - app-network
 
@@ -25,37 +26,59 @@ services:
     networks:
       - app-network
 
-  api-gateway:
-    container_name: fleetOS-api-gateway
-    image: fleet-os-api-gateway-image
-    build:
-      context: ./fleetOS-api-gateway
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./fleetOS-api-gateway:/app
-      - /app/node_modules
-    ports:
-      - 3000:3000
-    env_file:
-      - ./fleetOS-api-gateway/.env
-    networks:
-      - app-network
-
   auth-service:
     container_name: fleetOS-auth-service
     image: fleet-os-auth-service-image
     build:
-      context: ./fleetOS-auth-service
+      context: ./fleet-os-auth-service
       dockerfile: Dockerfile.dev
     volumes:
-      - ./fleetOS-auth-service:/app
+      - ./fleet-os-auth-service:/app
       - /app/node_modules
     ports:
       - 3001:3001
     depends_on:
       - mongo-db
     env_file:
-      - ./fleetOS-auth-service/.env
+      - ./fleet-os-auth-service/.env
+    networks:
+      - app-network
+
+  shipment-service:
+    container_name: fleetOS-shipment-service
+    image: fleet-os-shipment-service-image
+    build:
+      context: ./fleet-os-shipment-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./fleet-os-shipment-service:/app
+      - /app/node_modules
+    ports:
+      - 3002:3002
+    depends_on:
+      - mongo-db
+      - redis-stack
+    env_file:
+      - ./fleet-os-shipment-service/.env
+    networks:
+      - app-network
+
+  inventory-service:
+    container_name: fleetOS-inventory-service
+    image: fleet-os-inventory-service-image
+    build:
+      context: ./fleet-os-inventory-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./fleet-os-inventory-service:/app
+      - /app/node_modules
+    ports:
+      - 3003:3003
+    depends_on:
+      - mongo-db
+      - redis-stack
+    env_file:
+      - ./fleet-os-inventory-service/.env
     networks:
       - app-network
 
