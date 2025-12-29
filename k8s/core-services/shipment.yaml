@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipment-service
+  namespace: core-services
+  labels:
+    app: shipment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shipment-service
+  template:
+    metadata:
+      labels:
+        app: shipment-service
+    spec:
+      containers:
+      - name: shipment-service
+        image: fleet-os-shipment-service-image:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3002
+        envFrom:
+        - configMapRef:
+            name: shipment-config
+        - secretRef:
+            name: shipment-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shipment-service
+  namespace: core-services
+spec:
+  selector:
+    app: shipment-service
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002

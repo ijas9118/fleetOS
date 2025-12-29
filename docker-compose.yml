@@ -82,6 +82,47 @@ services:
     networks:
       - app-network
 
+  fleet-service:
+    container_name: fleetOS-fleet-service
+    image: fleet-os-fleet-service-image
+    build:
+      context: ./fleet-os-fleet-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./fleet-os-fleet-service:/app
+      - /app/node_modules
+    ports:
+      - 3004:3004
+    depends_on:
+      - mongo-db
+      - redis-stack
+    env_file:
+      - ./fleet-os-fleet-service/.env
+    networks:
+      - app-network
+
+  kong:
+    container_name: kong
+    image: kong:3.9
+    restart: always
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+    volumes:
+      - ./kong/kong.yml:/usr/local/kong/declarative/kong.yml
+    ports:
+      - "8000:8000"
+      - "8002:8001"
+      - "8443:8443"
+      - "8444:8444"
+    networks:
+      - app-network
+
 volumes:
   mongodb-data:
   redis-data:

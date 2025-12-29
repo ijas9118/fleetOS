@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-stack
+  namespace: infrastructure
+  labels:
+    app: redis-stack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-stack
+  template:
+    metadata:
+      labels:
+        app: redis-stack
+    spec:
+      containers:
+      - name: redis-stack
+        image: redis/redis-stack:7.2.0-v18
+        ports:
+        - containerPort: 6379
+        - containerPort: 8001
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-stack
+  namespace: infrastructure
+spec:
+  selector:
+    app: redis-stack
+  ports:
+    - name: redis
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+    - name: ui
+      protocol: TCP
+      port: 8001
+      targetPort: 8001

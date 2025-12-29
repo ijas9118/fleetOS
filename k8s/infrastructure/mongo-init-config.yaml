@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-init-scripts
+  namespace: infrastructure
+data:
+  create-users.js: |
+    db = db.getSiblingDB("auth-db");
+
+    if (db.users.countDocuments({ role: "PLATFORM_ADMIN" }) === 0) {
+      db.users.insertOne({
+        email: "admin@fleetos.com",
+        password: "$argon2id$v=19$m=16,t=2,p=1$N1BvQjVKejJMNGxCSWtXTw$ud5KDL2sRoeRJRu3R2A5iw", // "password"
+        name: "Platform Admin",
+        role: "PLATFORM_ADMIN",
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      print("✅ Platform Admin created successfully");
+    } else {
+      print("ℹ️ Platform Admin already exists");
+    }

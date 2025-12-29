@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleet-service
+  namespace: core-services
+  labels:
+    app: fleet-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleet-service
+  template:
+    metadata:
+      labels:
+        app: fleet-service
+    spec:
+      containers:
+      - name: fleet-service
+        image: fleet-os-fleet-service-image:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3004
+        envFrom:
+        - configMapRef:
+            name: fleet-config
+        - secretRef:
+            name: fleet-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleet-service
+  namespace: core-services
+spec:
+  selector:
+    app: fleet-service
+  ports:
+    - protocol: TCP
+      port: 3004
+      targetPort: 3004
