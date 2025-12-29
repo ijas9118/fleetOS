@@ -16,3 +16,6 @@
 [submodule "shared"]
 	path = shared
 	url = https://github.com/ijas9118/fleet-os-shared
+[submodule "client"]
+	path = client
+	url = https://github.com/ijas9118/fleet-os-frontend
