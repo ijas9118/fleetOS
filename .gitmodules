@@ -10,9 +10,6 @@
 [submodule "services/shipment-service"]
 	path = services/shipment-service
 	url = https://github.com/ijas9118/fleet-os-shipment-service
-[submodule "services/api-gateway"]
-	path = services/api-gateway
-	url = https://github.com/ijas9118/fleet-os-api-gateway
 [submodule "shared"]
 	path = shared
 	url = https://github.com/ijas9118/fleet-os-shared
