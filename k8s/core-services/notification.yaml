@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fleet-service
+  name: notification-service
   namespace: core-services
   labels:
-    app: fleet-service
+    app: notification-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: fleet-service
+      app: notification-service
   template:
     metadata:
       labels:
-        app: fleet-service
+        app: notification-service
     spec:
       containers:
-      - name: fleet-service
-        image: fleet-os-fleet-service-image:latest
-        imagePullPolicy: Never
+      - name: notification-service
+        image: fleet-os-notification-service-image:latest
+        imagePullPolicy: Never # Use local image
         ports:
-        - containerPort: 3004
+        - containerPort: 3005
         envFrom:
         - configMapRef:
-            name: fleet-config
+            name: notification-config
         - secretRef:
-            name: fleet-secret
+            name: notification-secret
         resources:
           requests:
             cpu: "100m"
@@ -36,7 +36,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 3004
+            port: 3005
           initialDelaySeconds: 15
           periodSeconds: 20
           timeoutSeconds: 5
@@ -44,7 +44,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /healthz
-            port: 3004
+            port: 3005
           initialDelaySeconds: 15
           periodSeconds: 20
           timeoutSeconds: 5
@@ -53,12 +53,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: fleet-service
+  name: notification-service
   namespace: core-services
 spec:
   selector:
-    app: fleet-service
+    app: notification-service
   ports:
     - protocol: TCP
-      port: 3004
-      targetPort: 3004
+      port: 3005
+      targetPort: 3005

@@ -30,6 +30,13 @@ spec:
           mountPath: /data/db
         - name: init-scripts
           mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
       volumes:
       - name: mongodb-data
         emptyDir: {} # Using emptyDir for local development simplicity

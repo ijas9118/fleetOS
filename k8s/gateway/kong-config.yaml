@@ -6,13 +6,60 @@ metadata:
 data:
   kong.yml: |
     _format_version: "3.0"
+    
+    # Global Plugins
+    plugins:
+      # CORS Configuration
+      - name: cors
+        config:
+          origins:
+            - http://localhost:5173
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Accept-Version
+            - Content-Length
+            - Content-MD5
+            - Content-Type
+            - Date
+            - Authorization
+          exposed_headers:
+            - Authorization
+          credentials: true
+          max_age: 3600
+      
+      # Global Rate Limiting
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 5000
+          policy: local
+      
+      # Request Size Limiting (10MB max)
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 10
+    
     services:
+      # ============================================
+      # Auth Service
+      # Handles: authentication, tenants, users, operations-managers, driver auth
+      # ============================================
       - name: auth-service
         url: http://auth-service.core-services:3001
+        connect_timeout: 60000
+        write_timeout: 60000
+        read_timeout: 60000
         routes:
+          # Public authentication routes
           - name: auth-public
             paths:
-              - /api/v1/auth/register-tenant
               - /api/v1/auth/register-admin
               - /api/v1/auth/verify-otp
               - /api/v1/auth/resend-otp
@@ -20,6 +67,14 @@ data:
               - /api/v1/auth/refresh
               - /api/v1/auth/accept-invite
             strip_path: false
+            plugins:
+              # Stricter rate limiting for public auth endpoints
+              - name: rate-limiting
+                config:
+                  minute: 10
+                  hour: 50
+          
+          # Protected auth routes
           - name: auth-protected
             paths:
               - /api/v1/auth
@@ -30,49 +85,140 @@ data:
                   key_claim_name: iss
                   claims_to_verify:
                     - exp
+                  run_on_preflight: false
+          
+          # Tenant registration (public)
+          - name: tenant-public
+            paths:
+              - /api/v1/tenants/register
+            strip_path: false
+            plugins:
+              # Stricter rate limiting for tenant registration
+              - name: rate-limiting
+                config:
+                  minute: 5
+                  hour: 20
+          
+          # Protected tenant routes
+          - name: tenant-protected
+            paths:
+              - /api/v1/tenants
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
+          
+          # User management routes
+          - name: user-protected
+            paths:
+              - /api/v1/users
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
+          
+          # Operations Manager routes
+          - name: operations-manager
+            paths:
+              - /api/v1/operations-managers
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
+          
+          # Driver authentication/user management routes
+          - name: driver-protected
+            paths:
+              - /api/v1/drivers
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
 
+      # ============================================
+      # Shipment Service
+      # Handles: shipment operations
+      # ============================================
       - name: shipment-service
         url: http://shipment-service.core-services:3002
+        connect_timeout: 60000
+        write_timeout: 60000
+        read_timeout: 60000
         routes:
           - name: shipment-routes
             paths:
               - /api/v1/shipments
             strip_path: false
-        plugins:
-          - name: jwt
-            config:
-              key_claim_name: iss
-              claims_to_verify:
-                - exp
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
 
+      # ============================================
+      # Inventory Service
+      # Handles: warehouses, inventory-items, stocks, stock-transactions
+      # ============================================
       - name: inventory-service
         url: http://inventory-service.core-services:3003
+        connect_timeout: 60000
+        write_timeout: 60000
+        read_timeout: 60000
         routes:
           - name: inventory-routes
             paths:
-              - /api/v1/inventory
+              - /api/v1/warehouses
+              - /api/v1/inventory-items
+              - /api/v1/stocks
+              - /api/v1/stock-transactions
+              - /api/v1/reservations
             strip_path: false
-        plugins:
-          - name: jwt
-            config:
-              key_claim_name: iss
-              claims_to_verify:
-                - exp
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
 
+      # ============================================
+      # Fleet Service
+      # Handles: fleet operations, driver assignments, vehicle management
+      # ============================================
       - name: fleet-service
         url: http://fleet-service.core-services:3004
+        connect_timeout: 60000
+        write_timeout: 60000
+        read_timeout: 60000
         routes:
           - name: fleet-routes
             paths:
               - /api/v1/fleet
             strip_path: false
-        plugins:
-          - name: jwt
-            config:
-              key_claim_name: iss
-              claims_to_verify:
-                - exp
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
 
+    # JWT Consumer Configuration
     consumers:
       - username: fleet-os-consumer
         jwt_secrets:

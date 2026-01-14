@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: inventory-service
-        image: fleet-os-inventory-service-image:latest
+        image: fleet-os-inventory-service-image:dev
         imagePullPolicy: Never
         ports:
         - containerPort: 3003
@@ -26,6 +26,29 @@ spec:
             name: inventory-config
         - secretRef:
             name: inventory-secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3003
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3003
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
 ---
 apiVersion: v1
 kind: Service

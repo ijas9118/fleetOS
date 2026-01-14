@@ -8,3 +8,5 @@ data:
   PORT: "3004"
   SERVICE_NAME: "fleet-os-fleet-service"
   LOG_LEVEL: "debug"
+  AUTH_SERVICE_URL: "http://auth-service.core-services.svc.cluster.local:3001"
+  AUTH_SERVICE_API_KEY: "dev-internal-key"

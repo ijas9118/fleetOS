@@ -5,6 +5,9 @@ metadata:
 build:
   local:
     push: false
+  tagPolicy:
+    envTemplate:
+      template: "dev"
   artifacts:
   - image: fleet-os-auth-service-image
     context: fleet-os-auth-service
@@ -13,7 +16,7 @@ build:
     sync:
       manual:
       - src: 'src/**/*.ts'
-        dest: .
+        dest: /app
   - image: fleet-os-fleet-service-image
     context: fleet-os-fleet-service
     docker:
@@ -21,7 +24,7 @@ build:
     sync:
       manual:
       - src: 'src/**/*.ts'
-        dest: .
+        dest: /app
   - image: fleet-os-inventory-service-image
     context: fleet-os-inventory-service
     docker:
@@ -29,7 +32,7 @@ build:
     sync:
       manual:
       - src: 'src/**/*.ts'
-        dest: .
+        dest: /app
   - image: fleet-os-shipment-service-image
     context: fleet-os-shipment-service
     docker:
@@ -37,7 +40,15 @@ build:
     sync:
       manual:
       - src: 'src/**/*.ts'
-        dest: .
+        dest: /app
+  - image: fleet-os-notification-service-image
+    context: fleet-os-notification-service
+    docker:
+      dockerfile: Dockerfile.dev
+    sync:
+      manual:
+      - src: 'src/**/*.ts'
+        dest: /app
 deploy:
   kubectl:
     manifests:

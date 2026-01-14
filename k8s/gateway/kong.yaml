@@ -16,40 +16,47 @@ spec:
         app: kong
     spec:
       containers:
-      - name: kong
-        image: kong:3.9
-        env:
-        - name: KONG_DATABASE
-          value: "off"
-        - name: KONG_DECLARATIVE_CONFIG
-          value: /usr/local/kong/declarative/kong.yml
-        - name: KONG_PROXY_ACCESS_LOG
-          value: /dev/stdout
-        - name: KONG_ADMIN_ACCESS_LOG
-          value: /dev/stdout
-        - name: KONG_PROXY_ERROR_LOG
-          value: /dev/stderr
-        - name: KONG_ADMIN_ERROR_LOG
-          value: /dev/stderr
-        - name: KONG_ADMIN_LISTEN
-          value: 0.0.0.0:8002, 0.0.0.0:8444 ssl
-        ports:
-        - containerPort: 8000
-          name: proxy
-        - containerPort: 8002
-          name: admin
-        - containerPort: 8443
-          name: proxy-ssl
-        - containerPort: 8444
-          name: admin-ssl
-        volumeMounts:
-        - name: kong-declarative-config
-          mountPath: /usr/local/kong/declarative
-          readOnly: true
+        - name: kong
+          image: kong:3.9
+          env:
+            - name: KONG_DATABASE
+              value: "off"
+            - name: KONG_DECLARATIVE_CONFIG
+              value: /usr/local/kong/declarative/kong.yml
+            - name: KONG_PROXY_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_ADMIN_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_PROXY_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_LISTEN
+              value: 0.0.0.0:8002, 0.0.0.0:8444 ssl
+          ports:
+            - containerPort: 8000
+              name: proxy
+            - containerPort: 8002
+              name: admin
+            - containerPort: 8443
+              name: proxy-ssl
+            - containerPort: 8444
+              name: admin-ssl
+          volumeMounts:
+            - name: kong-declarative-config
+              mountPath: /usr/local/kong/declarative
+              readOnly: true
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
       volumes:
-      - name: kong-declarative-config
-        configMap:
-          name: kong-declarative-config
+        - name: kong-declarative-config
+          configMap:
+            name: kong-declarative-config
 ---
 apiVersion: v1
 kind: Service
@@ -61,15 +68,15 @@ spec:
   selector:
     app: kong
   ports:
-  - name: proxy
-    port: 8000
-    targetPort: 8000
-  - name: admin
-    port: 8002
-    targetPort: 8002
-  - name: proxy-ssl
-    port: 8443
-    targetPort: 8443
-  - name: admin-ssl
-    port: 8444
-    targetPort: 8444
+    - name: proxy
+      port: 8000
+      targetPort: 8000
+    - name: admin
+      port: 8002
+      targetPort: 8002
+    - name: proxy-ssl
+      port: 8443
+      targetPort: 8443
+    - name: admin-ssl
+      port: 8444
+      targetPort: 8444

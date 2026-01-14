@@ -8,6 +8,9 @@ data:
   PORT: "3001"
   SERVICE_NAME: "fleet-os-auth-service"
   LOG_LEVEL: "debug"
-  CLIENT_URL: "http://localhost:3000"
+  CLIENT_URL: "http://localhost:5173"
   ACCESS_TOKEN_EXP: "15m"
   REFRESH_TOKEN_EXP: "7d"
+  # Kafka Configuration
+  KAFKA_BROKER: "kafka.infrastructure.svc.cluster.local:9092"
+  INTERNAL_API_KEY: "dev-internal-key"

@@ -6,14 +6,15 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: monitoring
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: core-services
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: infrastructure
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: monitoring
+

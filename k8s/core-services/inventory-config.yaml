@@ -8,3 +8,5 @@ data:
   PORT: "3003"
   SERVICE_NAME: "fleet-os-inventory-service"
   LOG_LEVEL: "debug"
+  INTERNAL_API_KEY: "dev-internal-key"
+  

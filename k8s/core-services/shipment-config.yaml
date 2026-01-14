@@ -8,3 +8,6 @@ data:
   PORT: "3002"
   SERVICE_NAME: "fleet-os-shipment-service"
   LOG_LEVEL: "debug"
+  INVENTORY_SERVICE_URL: "http://inventory-service.core-services.svc.cluster.local:3003"
+  INVENTORY_SERVICE_API_KEY: "dev-internal-key"
+
