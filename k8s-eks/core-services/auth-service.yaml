@@ -1,0 +1,148 @@
+---
+# Auth Service ConfigMap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-config
+  namespace: core-services
+data:
+  NODE_ENV: "production"
+  PORT: "3001"
+  SERVICE_NAME: "fleet-os-auth-service"
+  LOG_LEVEL: "info"
+  CLIENT_URL: "http://localhost:5173"  # Change to your actual frontend URL
+  ACCESS_TOKEN_EXP: "15m"
+  REFRESH_TOKEN_EXP: "7d"
+  KAFKA_BROKER: "kafka.infrastructure.svc.cluster.local:9092"
+  INTERNAL_API_KEY: "prod-internal-key"
+---
+# Auth Service Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: auth-secret
+  namespace: core-services
+type: Opaque
+stringData:
+  DATABASE_URL: "mongodb://admin:fleetOS2024SecurePass!@mongo-db.infrastructure:27017/auth-db?authSource=admin"
+  REDIS_URL: "redis://redis-stack.infrastructure:6379"
+  # IMPORTANT: Replace these keys with your own in production!
+  PRIVATE_KEY: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCk3fO5zBX1dJ+9
+    oLnUT/Xvp0llylbRhvZB027AlBtV0B9xRfr5VIT1qnXfgphshaVmQidv09Ivlc/r
+    M30USu9v1zx5+oBpUkBuXuqOGn7tEzZ0dts1c1BiQRSNWJ7AmCQmjNE8BTt8PSBx
+    lHwZvgcFl0jHBsB0RucqM0oFF6xwp0DGPUXKfUH8iRMIoPeoF9Qc/J9jK2xXqKPB
+    ZKaBLzy1pZSiA3CKFCXs/wCCngfJFdqERxTvsGL+9CYV4Adrp51mfWb47t5sezaL
+    Xn8CeClXNg+vjQOZIaKlrqgOe7VNQy5nGZrVTiL4rbKl9dxogbbnJaSzuNC+35rx
+    ksBip5gXAgMBAAECggEAImDuC9ZU1eRF0yMK3Qz3ecvmcEVrKTH9c+iE9b9sm85U
+    YCh5lzhaqWesQLlY03hi7xnoY1dGQwn4W1FXSb3+g9HcGIt174BpUxqTyqIXyZPy
+    DQMj3td28aYkhPzvzbVsBGXk06E7sEKG22hdIHkRuca8NFRiGV0XoyMi0kEHgk3o
+    ap6ay+TXIhqVL73zAmpj+sJ+18tRzJy//ltGdmTylHOca9nBJIrVlKQ9PLQQ6dtx
+    EaN74icMOLj5XX2VBVS++nXfrmg3SykXRef3uE5JLANlmfU/U+6XkM3gxz3B6y7a
+    jB7PDph7W/ckMbufB7/lqQnFY/dNEbWKjsIJWpYoYQKBgQDTgcyx1DDu9QhBKgC0
+    bfHny65btLCEOpSnBR+cGPu2KIJwQve1UyXxWDQxnLpsIoscbH2FVp4zrIKzU9YT
+    cmKO/AnEptCmpEzKI7npo7UBrl2qilDXUo+PM8/gREoOF8yUv5B3hz18jD7tZjXi
+    I6D+K5HwYkRAKCSGxXeDypTMfwKBgQDHjHdewIrVpyXeE8SW/hpDlw6eTfdy4tjH
+    44JuS6nvWlSxNpR/kHkMnZmUxZHUHLNf/1mC525ODD+UlJNnRk167hauHfflhRyB
+    x2F9f+tApK0OFpuSpWWKCJpznzYW/M0mZKKEbQ6z5xWjQG2Al/7t/aOLTHWhxDO/
+    1RnZL+RIaQKBgA8YE0iZkQhsmjM0USqPMhVNttq6kWJOX+9vcSsNqWD9kRl73ful
+    vG510fu8aJ1w9aaIo4iRfubHJ+iuUfe/UQNNP1E2amuKDCTc2davpSpCjFKwXkaP
+    kMkydGJX3UUWM7Zl2WR+VUf/JjqA8dV6n3GkIF0cViyR8NFhZD8WhPn3AoGBAL0h
+    GiZ5MV0srgxdCg/eSMBVFKrf1K9T6AkUThQBrM/J+sl3pKl/IeveF6lU1FGI3k4X
+    NByJAxgALebCJy9UB62CqYZfqwwj7I/ojDMpoaxEKC1ZKhyEnMeGPfVmKhsBgeNo
+    sEv5HV1PoUd4khC2fw3MP0yQrFElJ7Mi4/vgk2o5AoGBAJCbhqhujHQuz19VeGvi
+    bJTMRkQGa4/NmWHbXBcsgfreVc95ZWReq8W4XYPHWHgY9Igzht+0IEtw+2Mvebmo
+    ZBLXWjvBYOY5F2k50Ug1tav4wpftklWRd+RSYIU2X/+nWweEZ0Dub4GIfP8ynMOM
+    7b+6KcknEp85SAT5ZPVguAqM
+    -----END PRIVATE KEY-----
+
+  PUBLIC_KEY: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApN3zucwV9XSfvaC51E/1
+    76dJZcpW0Yb2QdNuwJQbVdAfcUX6+VSE9ap134KYbIWlZkInb9PSL5XP6zN9FErv
+    b9c8efqAaVJAbl7qjhp+7RM2dHbbNXNQYkEUjViewJgkJozRPAU7fD0gcZR8Gb4H
+    BZdIxwbAdEbnKjNKBRescKdAxj1Fyn1B/IkTCKD3qBfUHPyfYytsV6ijwWSmgS88
+    taWUogNwihQl7P8Agp4HyRXahEcU77Bi/vQmFeAHa6edZn1m+O7ebHs2i15/Angp
+    VzYPr40DmSGipa6oDnu1TUMuZxma1U4i+K2ypfXcaIG25yWks7jQvt+a8ZLAYqeY
+    FwIDAQAB
+    -----END PUBLIC KEY-----
+
+---
+# Auth Service Deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: core-services
+  labels:
+    app: auth-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+        version: v1
+    spec:
+      containers:
+      - name: auth-service
+        image: 314146326498.dkr.ecr.ap-south-1.amazonaws.com/fleetos/auth-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3001
+          name: http
+        envFrom:
+        - configMapRef:
+            name: auth-config
+        - secretRef:
+            name: auth-secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3001
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+---
+# Auth Service Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: core-services
+  labels:
+    app: auth-service
+spec:
+  type: ClusterIP
+  selector:
+    app: auth-service
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+      name: http

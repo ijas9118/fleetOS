@@ -1,0 +1,99 @@
+---
+# Inventory Service ConfigMap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventory-config
+  namespace: core-services
+data:
+  NODE_ENV: "production"
+  PORT: "3003"
+  SERVICE_NAME: "fleet-os-inventory-service"
+  LOG_LEVEL: "info"
+  KAFKA_BROKER: "kafka.infrastructure.svc.cluster.local:9092"
+  INTERNAL_API_KEY: "prod-internal-key"
+---
+# Inventory Service Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: inventory-secret
+  namespace: core-services
+type: Opaque
+stringData:
+  DATABASE_URL: "mongodb://admin:fleetOS2024SecurePass!@mongo-db.infrastructure:27017/inventory-db?authSource=admin"
+  REDIS_URL: "redis://redis-stack.infrastructure:6379"
+---
+# Inventory Service Deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: core-services
+  labels:
+    app: inventory-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+        version: v1
+    spec:
+      containers:
+      - name: inventory-service
+        image: 314146326498.dkr.ecr.ap-south-1.amazonaws.com/fleetos/inventory-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3003
+          name: http
+        envFrom:
+        - configMapRef:
+            name: inventory-config
+        - secretRef:
+            name: inventory-secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3003
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3003
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+# Inventory Service Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: core-services
+  labels:
+    app: inventory-service
+spec:
+  type: ClusterIP
+  selector:
+    app: inventory-service
+  ports:
+    - protocol: TCP
+      port: 3003
+      targetPort: 3003
+      name: http

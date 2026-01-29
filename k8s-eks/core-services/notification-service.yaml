@@ -1,0 +1,105 @@
+---
+# Notification Service ConfigMap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-config
+  namespace: core-services
+data:
+  NODE_ENV: "production"
+  PORT: "3005"
+  SERVICE_NAME: "fleet-os-notification-service"
+  LOG_LEVEL: "info"
+  KAFKA_BROKER: "kafka.infrastructure.svc.cluster.local:9092"
+  KAFKA_GROUP_ID: "notification-service-group"
+---
+# Notification Service Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: notification-secret
+  namespace: core-services
+type: Opaque
+stringData:
+  DATABASE_URL: "mongodb://admin:fleetOS2024SecurePass!@mongo-db.infrastructure:27017/notification-db?authSource=admin"
+  # Add your email/SMS credentials here
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_SECURE: "true"
+  EMAIL_FROM: "fleetos.logistics@gmail.com"
+  SMTP_USER: "ZmxlZXRvcy5sb2dpc3RpY3NAZ21haWwuY29t" 
+  SMTP_PASSWORD: "amVyaWdjZHFuZXJ4dHJ2eA==" 
+---
+# Notification Service Deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: core-services
+  labels:
+    app: notification-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+        version: v1
+    spec:
+      containers:
+      - name: notification-service
+        image: 314146326498.dkr.ecr.ap-south-1.amazonaws.com/fleetos/notification-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3005
+          name: http
+        envFrom:
+        - configMapRef:
+            name: notification-config
+        - secretRef:
+            name: notification-secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "300m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3005
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3005
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+# Notification Service Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: core-services
+  labels:
+    app: notification-service
+spec:
+  type: ClusterIP
+  selector:
+    app: notification-service
+  ports:
+    - protocol: TCP
+      port: 3005
+      targetPort: 3005
+      name: http

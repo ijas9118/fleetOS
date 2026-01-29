@@ -1,0 +1,72 @@
+---
+# Redis Stack Deployment for EKS
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-stack
+  namespace: infrastructure
+  labels:
+    app: redis-stack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-stack
+  template:
+    metadata:
+      labels:
+        app: redis-stack
+    spec:
+      containers:
+      - name: redis-stack
+        image: redis/redis-stack:7.2.0-v18
+        ports:
+        - containerPort: 6379
+          name: redis
+        - containerPort: 8001
+          name: redis-ui
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: redis-data
+        emptyDir: {}  # Using emptyDir for demo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-stack
+  namespace: infrastructure
+  labels:
+    app: redis-stack
+spec:
+  type: ClusterIP
+  selector:
+    app: redis-stack
+  ports:
+    - name: redis
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+    - name: redis-ui
+      protocol: TCP
+      port: 8001
+      targetPort: 8001

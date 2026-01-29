@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infrastructure
+  labels:
+    name: infrastructure
+    environment: demo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: core-services
+  labels:
+    name: core-services
+    environment: demo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gateway
+  labels:
+    name: gateway
+    environment: demo

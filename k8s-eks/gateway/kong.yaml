@@ -1,0 +1,332 @@
+---
+# Kong API Gateway for EKS
+# DB-less mode with declarative configuration
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-declarative-config
+  namespace: gateway
+data:
+  kong.yml: |
+    _format_version: "3.0"
+    
+    # Global Plugins
+    plugins:
+      # CORS Configuration
+      - name: cors
+        config:
+          origins:
+            - "*"
+            - http://localhost:5173
+            - https://fleet-os-frontend-beta.vercel.app
+            - https://fleet-os-frontend-pkdazaoyo-ijas-ahammeds-projects.vercel.app
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Accept-Version
+            - Content-Length
+            - Content-MD5
+            - Content-Type
+            - Date
+            - Authorization
+          exposed_headers:
+            - Authorization
+          credentials: true
+          max_age: 3600
+      
+      # Global Rate Limiting
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 5000
+          policy: local
+      
+      # Request Size Limiting (10MB max)
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 10
+    
+    services:
+      # ============================================
+      # Auth Service
+      # ============================================
+      - name: auth-service
+        url: http://auth-service.core-services:3001
+        connect_timeout: 60000
+        write_timeout: 60000
+        read_timeout: 60000
+        routes:
+          # Public authentication routes
+          - name: auth-public
+            paths:
+              - /api/v1/auth/register-admin
+              - /api/v1/auth/verify-otp
+              - /api/v1/auth/resend-otp
+              - /api/v1/auth/login
+              - /api/v1/auth/refresh
+              - /api/v1/auth/accept-invite
+            strip_path: false
+            plugins:
+              - name: rate-limiting
+                config:
+                  minute: 10
+                  hour: 50
+          
+          # Protected auth routes
+          - name: auth-protected
+            paths:
+              - /api/v1/auth
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
+          
+          # Tenant registration (public)
+          - name: tenant-public
+            paths:
+              - /api/v1/tenants/register
+            strip_path: false
+            plugins:
+              - name: rate-limiting
+                config:
+                  minute: 5
+                  hour: 20
+          
+          # Protected tenant routes
+          - name: tenant-protected
+            paths:
+              - /api/v1/tenants
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
+          
+          # User management routes
+          - name: user-protected
+            paths:
+              - /api/v1/users
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
+          
+          # Operations Manager routes
+          - name: operations-manager
+            paths:
+              - /api/v1/operations-managers
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
+          
+          # Driver routes
+          - name: driver-protected
+            paths:
+              - /api/v1/drivers
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+                  run_on_preflight: false
+
+      # ============================================
+      # Shipment Service
+      # ============================================
+      - name: shipment-service
+        url: http://shipment-service.core-services:3002
+        connect_timeout: 60000
+        write_timeout: 60000
+        read_timeout: 60000
+        routes:
+          - name: shipment-routes
+            paths:
+              - /api/v1/shipments
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+
+      # ============================================
+      # Inventory Service
+      # ============================================
+      - name: inventory-service
+        url: http://inventory-service.core-services:3003
+        connect_timeout: 60000
+        write_timeout: 60000
+        read_timeout: 60000
+        routes:
+          - name: inventory-routes
+            paths:
+              - /api/v1/warehouses
+              - /api/v1/inventory-items
+              - /api/v1/stocks
+              - /api/v1/stock-transactions
+              - /api/v1/reservations
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+
+      # ============================================
+      # Fleet Service
+      # ============================================
+      - name: fleet-service
+        url: http://fleet-service.core-services:3004
+        connect_timeout: 60000
+        write_timeout: 60000
+        read_timeout: 60000
+        routes:
+          - name: fleet-routes
+            paths:
+              - /api/v1/fleet
+            strip_path: false
+            plugins:
+              - name: jwt
+                config:
+                  key_claim_name: iss
+                  claims_to_verify:
+                    - exp
+
+    # JWT Consumer Configuration
+    consumers:
+      - username: fleet-os-consumer
+        jwt_secrets:
+          - key: fleet-os
+            algorithm: RS256
+            rsa_public_key: |
+              -----BEGIN PUBLIC KEY-----
+              MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApN3zucwV9XSfvaC51E/1
+              76dJZcpW0Yb2QdNuwJQbVdAfcUX6+VSE9ap134KYbIWlZkInb9PSL5XP6zN9FErv
+              b9c8efqAaVJAbl7qjhp+7RM2dHbbNXNQYkEUjViewJgkJozRPAU7fD0gcZR8Gb4H
+              BZdIxwbAdEbnKjNKBRescKdAxj1Fyn1B/IkTCKD3qBfUHPyfYytsV6ijwWSmgS88
+              taWUogNwihQl7P8Agp4HyRXahEcU77Bi/vQmFeAHa6edZn1m+O7ebHs2i15/Angp
+              VzYPr40DmSGipa6oDnu1TUMuZxma1U4i+K2ypfXcaIG25yWks7jQvt+a8ZLAYqeY
+              FwIDAQAB
+              -----END PUBLIC KEY-----
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong
+  namespace: gateway
+  labels:
+    app: kong
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong
+  template:
+    metadata:
+      labels:
+        app: kong
+    spec:
+      containers:
+        - name: kong
+          image: kong:3.9
+          env:
+            - name: KONG_DATABASE
+              value: "off"
+            - name: KONG_DECLARATIVE_CONFIG
+              value: /usr/local/kong/declarative/kong.yml
+            - name: KONG_PROXY_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_ADMIN_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_PROXY_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_LISTEN
+              value: 0.0.0.0:8002, 0.0.0.0:8444 ssl
+          ports:
+            - containerPort: 8000
+              name: proxy
+            - containerPort: 8002
+              name: admin
+            - containerPort: 8443
+              name: proxy-ssl
+            - containerPort: 8444
+              name: admin-ssl
+          volumeMounts:
+            - name: kong-declarative-config
+              mountPath: /usr/local/kong/declarative
+              readOnly: true
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: kong-declarative-config
+          configMap:
+            name: kong-declarative-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong
+  namespace: gateway
+  labels:
+    app: kong
+spec:
+  type: LoadBalancer
+  selector:
+    app: kong
+  ports:
+    - name: proxy
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+    - name: admin
+      port: 8002
+      targetPort: 8002
+      protocol: TCP
+    - name: proxy-ssl
+      port: 8443
+      targetPort: 8443
+      protocol: TCP

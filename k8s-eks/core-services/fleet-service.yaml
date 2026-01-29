@@ -1,0 +1,99 @@
+---
+# Fleet Service ConfigMap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fleet-config
+  namespace: core-services
+data:
+  NODE_ENV: "production"
+  PORT: "3004"
+  SERVICE_NAME: "fleet-os-fleet-service"
+  LOG_LEVEL: "info"
+  KAFKA_BROKER: "kafka.infrastructure.svc.cluster.local:9092"
+  INTERNAL_API_KEY: "prod-internal-key"
+---
+# Fleet Service Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fleet-secret
+  namespace: core-services
+type: Opaque
+stringData:
+  DATABASE_URL: "mongodb://admin:fleetOS2024SecurePass!@mongo-db.infrastructure:27017/fleet-db?authSource=admin"
+  REDIS_URL: "redis://redis-stack.infrastructure:6379"
+---
+# Fleet Service Deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleet-service
+  namespace: core-services
+  labels:
+    app: fleet-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleet-service
+  template:
+    metadata:
+      labels:
+        app: fleet-service
+        version: v1
+    spec:
+      containers:
+      - name: fleet-service
+        image: 314146326498.dkr.ecr.ap-south-1.amazonaws.com/fleetos/fleet-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3004
+          name: http
+        envFrom:
+        - configMapRef:
+            name: fleet-config
+        - secretRef:
+            name: fleet-secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3004
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3004
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+# Fleet Service Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleet-service
+  namespace: core-services
+  labels:
+    app: fleet-service
+spec:
+  type: ClusterIP
+  selector:
+    app: fleet-service
+  ports:
+    - protocol: TCP
+      port: 3004
+      targetPort: 3004
+      name: http

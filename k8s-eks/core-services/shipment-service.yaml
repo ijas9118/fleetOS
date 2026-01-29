@@ -1,0 +1,101 @@
+---
+# Shipment Service ConfigMap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shipment-config
+  namespace: core-services
+data:
+  NODE_ENV: "production"
+  PORT: "3002"
+  SERVICE_NAME: "fleet-os-shipment-service"
+  LOG_LEVEL: "info"
+  KAFKA_BROKER: "kafka.infrastructure.svc.cluster.local:9092"
+  INTERNAL_API_KEY: "prod-internal-key"
+  INVENTORY_SERVICE_URL: "http://inventory-service.core-services:3003"
+  INVENTORY_SERVICE_API_KEY: "prod-internal-key"
+---
+# Shipment Service Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: shipment-secret
+  namespace: core-services
+type: Opaque
+stringData:
+  DATABASE_URL: "mongodb://admin:fleetOS2024SecurePass!@mongo-db.infrastructure:27017/shipment-db?authSource=admin"
+  REDIS_URL: "redis://redis-stack.infrastructure:6379"
+---
+# Shipment Service Deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipment-service
+  namespace: core-services
+  labels:
+    app: shipment-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shipment-service
+  template:
+    metadata:
+      labels:
+        app: shipment-service
+        version: v1
+    spec:
+      containers:
+      - name: shipment-service
+        image: 314146326498.dkr.ecr.ap-south-1.amazonaws.com/fleetos/shipment-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3002
+          name: http
+        envFrom:
+        - configMapRef:
+            name: shipment-config
+        - secretRef:
+            name: shipment-secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3002
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3002
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+# Shipment Service Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shipment-service
+  namespace: core-services
+  labels:
+    app: shipment-service
+spec:
+  type: ClusterIP
+  selector:
+    app: shipment-service
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002
+      name: http
